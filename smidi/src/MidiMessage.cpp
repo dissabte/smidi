@@ -1,3 +1,8 @@
+/*!
+ * \file MidiMessage.cpp
+ * Contains implementation of MidiMessage class.
+ */
+
 #include <../include/smidi/MidiMessage.h>
 #include <algorithm>
 
@@ -7,7 +12,7 @@ MidiMessage::MidiMessage()
 {
 }
 
-MidiMessage::MidiMessage(const std::vector<unsigned char> newData, unsigned long long newTimestamp)
+MidiMessage::MidiMessage(const std::vector<unsigned char>& newData, unsigned long long newTimestamp)
     : _data(newData)
     , _timestamp(newTimestamp)
 {
@@ -20,14 +25,24 @@ MidiMessage::MidiMessage(const unsigned char* newData, MidiMessage::size_type ne
 	std::copy(newData, newData + newSize, _data.begin());
 }
 
+MidiMessage::MidiMessage(std::initializer_list<unsigned char> newData, unsigned long long newTimestamp)
+    : _data(newData)
+    , _timestamp(newTimestamp)
+{
+}
+
+MidiMessage::~MidiMessage()
+{
+}
+
 bool MidiMessage::isEmpty() const
 {
 	return _data.empty();
 }
 
-bool MidiMessage::isActually(unsigned char noteType) const
+bool MidiMessage::isActually(MidiMessage::Type type) const
 {
-	return isEmpty() ? false : (_data.front() & noteType == noteType);
+	return isEmpty() ? false : ((_data.front() & type) == type);
 }
 
 bool MidiMessage::isCompleteSysEx() const
@@ -37,7 +52,9 @@ bool MidiMessage::isCompleteSysEx() const
 
 unsigned char MidiMessage::channel() const
 {
-	return (isEmpty() || isActually(kSystem)) ? false : (_data.front() & 0x0F);
+	bool emt = isEmpty();
+	bool syst = isActually(System);
+	return (isEmpty() || isActually(System)) ? 0 : (_data.front() & 0x0F);
 }
 
 unsigned long long MidiMessage::timestamp() const
