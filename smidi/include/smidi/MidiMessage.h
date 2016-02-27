@@ -6,9 +6,10 @@
  */
 
 #include <vector>
+#include <string>
 
 /*!
- * \class MidiMessage MidiMessage.h <smidi/MidiMessage>
+ * \class MidiMessage MidiMessage.h <smidi/MidiMessage.h>
  * \brief The MidiMessage class
  */
 
@@ -128,7 +129,7 @@ public:
 	*
 	* Some OS dependent functions that send MIDI messages to the driver accept pointers to message data buffer.
 	*/
-	operator const char*() const;
+	operator unsigned char*();
 
 	/*!
 	* \brief Combines two message in a single one.
@@ -154,6 +155,9 @@ public:
 	* If the size is bigger than the current one - the contents will be filled with zeros.
 	*/
 	void resizeBuffer(size_type newSize);
+
+	//! Returns string representation of this message
+	std::string toString() const;
 
 private:
 	data_type           _data;

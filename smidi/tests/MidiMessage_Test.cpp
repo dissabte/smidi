@@ -102,8 +102,8 @@ SUITE(MidiMessageTests)
 		messagePointer = concatenated;
 		CHECK_EQUAL(messagePointer, concatenated.data().data());
 
-		const char* messagePointer2 = nullptr;
+		unsigned char* messagePointer2 = nullptr;
 		messagePointer2 = concatenated;
-		CHECK_EQUAL(messagePointer2, reinterpret_cast<const char*>(messagePointer));
+		CHECK_EQUAL(messagePointer2, messagePointer);
 	}
 }

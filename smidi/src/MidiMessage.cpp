@@ -94,9 +94,14 @@ void MidiMessage::resizeBuffer(MidiMessage::size_type newSize)
 	_data.resize(newSize);
 }
 
-MidiMessage::operator const char*() const
+std::string MidiMessage::toString() const
 {
-	return reinterpret_cast<const char*>(_data.data());
+
+}
+
+MidiMessage::operator unsigned char*()
+{
+	return _data.data();
 }
 
 MidiMessage::operator const unsigned char*() const
