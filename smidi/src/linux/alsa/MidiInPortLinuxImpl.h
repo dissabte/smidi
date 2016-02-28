@@ -1,5 +1,7 @@
 #pragma once
 
+//! \cond INTERNAL
+
 /*!
  * \file MidiInPortLinuxImpl.h
  * \warning This file is not a part of library public interface!
@@ -51,7 +53,6 @@ private:
 	snd_seq_addr_t             _applicationAddress;
 	snd_seq_port_subscribe_t*  _subscription;
 	snd_midi_event_t*          _parser;
-	//pthread_t                  _thread;
 	std::thread                _thread;
 	MidiQueue                  _queue;
 	int                        _pipefd[2];
@@ -59,3 +60,4 @@ private:
 	bool                       _poll;
 };
 
+//! \endcond

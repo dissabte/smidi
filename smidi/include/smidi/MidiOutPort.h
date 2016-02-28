@@ -7,7 +7,6 @@
 
 #include "MidiPort.h"
 #include "MidiMessage.h"
-#include <memory>
 
 /*!
  * \brief The MidiOutPort class is the interface for MIDI output ports.

@@ -1,5 +1,7 @@
+//! \cond INTERNAL
+
 /*!
- * \file MidiOutPortImpl.cpp
+ * \file MidiOutPortLinuxImpl.cpp
  */
 
 #include "MidiOutPortLinuxImpl.h"
@@ -144,3 +146,5 @@ int MidiOutPortLinux::Implementation::applicationClientId() const
 {
 	return _applicationAddress.client;
 }
+
+//! \endcond

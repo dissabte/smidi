@@ -17,12 +17,11 @@
 class MidiPort
 {
 public:
-	/*!
-	 * \brief Сonstructor
-	 * \param name the device dependent name of this MIDI port.
-	 */
-	explicit MidiPort() {}
-	virtual ~MidiPort() {}
+	//! Trivial constructor
+	explicit MidiPort() = default;
+
+	//! Trivial destructor
+	virtual ~MidiPort() = default;
 
 	//! Returns the reference to the name of this port (device driver dependent)
 	virtual const std::string& name() const = 0;

@@ -1,3 +1,10 @@
+//! \cond INTERNAL
+
+/*!
+ * \file MidiQueue.cpp
+ * \warning This file is not a part of library public interface!
+ */
+
 #include "MidiQueue.h"
 #include <iostream>
 
@@ -91,3 +98,5 @@ unsigned int MidiQueue::convertBPMToMicroseconds(double bpm) const
 	const double microsecondsPerQuarterNote = 6e7 / bpm;
 	return static_cast<unsigned int>(microsecondsPerQuarterNote);
 }
+
+//! \endcond

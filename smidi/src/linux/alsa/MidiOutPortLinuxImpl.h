@@ -1,7 +1,10 @@
 #pragma once
 
+//! \cond INTERNAL
+
 /*!
  * \file MidiOutPortLinuxImpl.h
+ * \warning This file is not a part of library public interface!
  */
 
 #include "../MidiOutPortLinux.h"
@@ -38,3 +41,5 @@ private:
 	MidiEventEncoder          _encoder;
 	bool                      _isOpen;
 };
+
+//! \endcond

@@ -1,7 +1,10 @@
 #pragma once
 
+//! \cond INTERNAL
+
 /*!
  * \file MidiDeviceEnumeratorImpl.h
+ * \warning This file is not a part of library public interface!
  * Contains Linux implementation of MidiDeviceEnumerator
  */
 
@@ -10,6 +13,7 @@
 #include "../../../include/smidi/MidiPort.h"
 #include <map>
 #include <set>
+#include <vector>
 #include <tuple>
 #include <string>
 #include <memory>
@@ -48,7 +52,7 @@ private:
 	void updateAllDeviceInformation(DeviceMap& devices) const;
 
 	void collectClientInformation(snd_seq_t* sequencer, snd_seq_client_info_t* clientInfo, DeviceMap& devices) const;
-	void collectMidiPortObjects(snd_seq_t* sequencer, snd_seq_client_info_t* clientInfo, snd_seq_port_info_t*portInfo, std::vector<std::shared_ptr<MidiPort>>& inputPorts, std::vector<std::shared_ptr<MidiPort> >& outputPorts);
+	void collectMidiPortObjects(snd_seq_t* sequencer, snd_seq_client_info_t* clientInfo, snd_seq_port_info_t*portInfo, std::vector<std::shared_ptr<MidiInPort>>& inputPorts, std::vector<std::shared_ptr<MidiOutPort> >& outputPorts);
 
 	void traverseAllClients(snd_seq_t* sequencer, ClientAction action) const;
 	void traverseClientPorts(snd_seq_t* sequencer, snd_seq_client_info_t* clientInfo, int capabilities, MidiDeviceEnumerator::Implementation::PortAction action) const;

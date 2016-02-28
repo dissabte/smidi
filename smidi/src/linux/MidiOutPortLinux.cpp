@@ -1,5 +1,9 @@
+//! \cond INTERNAL
+
 /*!
  * \file MidiOutPortLinux.cpp
+ * \warning This file is not a part of library public interface!
+ *
  * Contains platform independent MidiOutPortLinux implementation
  */
 
@@ -42,3 +46,5 @@ void MidiOutPortLinux::sendMessage(const MidiMessage& message)
 		_impl->sendMessage(message);
 	}
 }
+
+//! \endcond

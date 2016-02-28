@@ -1,3 +1,10 @@
+//! \cond INTERNAL
+
+/*!
+ * \file MidiSyncImpl.cpp
+ * \warning This file is not a part of library public interface!
+ */
+
 #include "MidiSyncImpl.h"
 
 MidiSyncImpl::MidiSyncImpl()
@@ -36,3 +43,5 @@ double MidiSyncImpl::syncInitialLatencyForTempo(double bpm) const
 	(void)bpm;
 	return 0.0;
 }
+
+//! \endcond

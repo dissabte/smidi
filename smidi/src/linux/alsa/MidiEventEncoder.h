@@ -1,5 +1,11 @@
 #pragma once
 
+//! \cond INTERNAL
+
+/*!
+ * \file MidiEventEncoder.h
+ */
+
 #include "../../../include/smidi/MidiMessage.h"
 #include <alsa/asoundlib.h>
 
@@ -24,3 +30,5 @@ private:
 	snd_midi_event_t* _parser;
 	int               _bufferSize;
 };
+
+//! \endcond

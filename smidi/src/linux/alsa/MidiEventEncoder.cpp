@@ -1,3 +1,9 @@
+//! \cond INTERNAL
+
+/*!
+ * \file MidiEventEncoder.cpp
+ */
+
 #include "MidiEventEncoder.h"
 #include "MidiAlsaConstants.h"
 #include <sys/time.h>
@@ -126,3 +132,5 @@ bool MidiEventEncoder::encode(snd_seq_event_t* event, const MidiMessage& message
 	}
 	return result;
 }
+
+//! \endcond

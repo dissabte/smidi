@@ -1,9 +1,12 @@
 #pragma once
 
+//! \cond INTERNAL
+
 /*!
  * \file MidiOutPortLinux.h
- * Contains platfrom-independent part of MIDI output port implementation.
  * \warning This file is not a part of library public interface!
+ *
+ * Contains platfrom-independent part of MIDI output port implementation.
  */
 
 #include "../../include/smidi/MidiOutPort.h"
@@ -34,3 +37,4 @@ private:
 	std::unique_ptr<Implementation> _impl;
 };
 
+//! \endcond

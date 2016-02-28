@@ -1,5 +1,7 @@
+//! \cond INTERNAL
+
 /*!
- * \file MidiInPort
+ * \file MidiInPortLinux.cpp
  */
 
 #include "MidiInPortLinux.h"
@@ -13,10 +15,6 @@ MidiInPortLinux::MidiInPortLinux(std::unique_ptr<Implementation>&& implementatio
     , _impl(std::move(implementation))
 {
 	_impl->open();
-}
-
-MidiInPortLinux::~MidiInPortLinux()
-{
 }
 
 const std::string& MidiInPortLinux::name() const
@@ -33,3 +31,5 @@ void MidiInPortLinux::stop()
 {
 	_impl->stop();
 }
+
+//! \endcond

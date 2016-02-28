@@ -1,13 +1,15 @@
-#include "../include/smidi/MidiDevice.h"
+/*!
+ * \file MidiDevice.cpp
+ */
 
-MidiDevice::MidiDevice(const std::string& name, const MidiDevice::PortContainer& inputs, const MidiDevice::PortContainer& outputs)
+#include "../include/smidi/MidiDevice.h"
+#include "../include/smidi/MidiInPort.h"
+#include "../include/smidi/MidiOutPort.h"
+
+MidiDevice::MidiDevice(const std::string& name, const MidiDevice::InputPortContainer& inputs, const MidiDevice::OutputPortContainer& outputs)
     : _name(name)
     , _inputPorts(inputs)
     , _outputPorts(outputs)
-{
-}
-
-MidiDevice::~MidiDevice()
 {
 }
 
@@ -16,12 +18,12 @@ const std::string& MidiDevice::name() const
 	return _name;
 }
 
-const MidiDevice::PortContainer&MidiDevice::inputPorts() const
+const MidiDevice::InputPortContainer& MidiDevice::inputPorts() const
 {
 	return _inputPorts;
 }
 
-const MidiDevice::PortContainer&MidiDevice::outputPorts() const
+const MidiDevice::OutputPortContainer& MidiDevice::outputPorts() const
 {
 	return _outputPorts;
 }

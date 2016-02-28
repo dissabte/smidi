@@ -1,5 +1,6 @@
 #include <iostream>
 #include <smidi/MidiDeviceEnumerator.h>
+#include <smidi/MidiDevice.h>
 #include <smidi/MidiInPort.h>
 #include <smidi/MidiOutPort.h>
 #include <watcher/DeviceWatcher.h>
@@ -14,11 +15,11 @@ void printDevices(const MidiDeviceEnumerator& enumerator)
 		std::cout << "\t- " << deviceName << std::endl;
 
 		std::shared_ptr<MidiDevice> device = enumerator.createDevice(deviceName);
-		for (const std::shared_ptr<MidiPort>& port : device->inputPorts())
+		for (const std::shared_ptr<MidiInPort>& port : device->inputPorts())
 		{
 			std::cout << "\t  IN:  " << port->name() << std::endl;
 		}
-		for (const std::shared_ptr<MidiPort>& port : device->outputPorts())
+		for (const std::shared_ptr<MidiOutPort>& port : device->outputPorts())
 		{
 			std::cout << "\t  OUT: " << port->name() << std::endl;
 		}

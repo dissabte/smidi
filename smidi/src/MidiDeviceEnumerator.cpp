@@ -3,6 +3,7 @@
  */
 
 #include "../include/smidi/MidiDeviceEnumerator.h"
+#include "../include/smidi/MidiDevice.h"
 
 #ifdef __linux__
 

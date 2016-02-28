@@ -1,7 +1,21 @@
 #pragma once
 
+//! \cond INTERNAL
+
+/*!
+ * \file MidiQueue.h
+ * \warning This file is not part of the library public interface!
+ * Contains ASLA queue wrapper
+ */
+
 #include <alsa/asoundlib.h>
 #include <string>
+
+/*!
+ * \brief The MidiQueue class
+ * \class MidiQueue MidiQueue.h "MidiQueue.h"
+ * \warning This class is not part of the library public interface!
+ */
 
 class MidiQueue
 {
@@ -33,3 +47,5 @@ private:
 	snd_seq_t* _sequencer;
 	int        _id;
 };
+
+//! \endcond

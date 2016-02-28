@@ -1,5 +1,7 @@
 #pragma once
 
+//! \cond INTERNAL
+
 /*!
  * \file MidiSyncImpl.h
  * Contains platfrom-independent part of MIDI sync implementation.
@@ -22,3 +24,5 @@ public:
 	virtual bool isSyncStarted() const override;
 	virtual double syncInitialLatencyForTempo(double bpm) const override;
 };
+
+//! \endcond

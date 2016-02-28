@@ -1,3 +1,5 @@
+//! \cond INTERNAL
+
 /*!
  * \file MidiInPortLinuxImpl.cpp
  * \warning This file is not a part of library public interface!
@@ -276,3 +278,5 @@ void MidiInPortLinux::Implementation::midiInputThread()
 		}
 	}
 }
+
+//! \endcond

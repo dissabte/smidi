@@ -1,3 +1,5 @@
+//! \cond INTERNAL
+
 /*!
  * \file MidiDeviceEnumeratorImpl.cpp
  */
@@ -72,8 +74,8 @@ std::shared_ptr<MidiDevice> MidiDeviceEnumerator::Implementation::createDevice(c
 			int error = snd_seq_get_any_client_info(_sequencer, clientId, clientInfo);
 			if (MidiAlsaConstants::kNoError == error)
 			{
-				std::vector<std::shared_ptr<MidiPort>> inputs;
-				std::vector<std::shared_ptr<MidiPort>> outputs;
+				std::vector<std::shared_ptr<MidiInPort>> inputs;
+				std::vector<std::shared_ptr<MidiOutPort>> outputs;
 				const PortAction collectPorts = std::bind(&Implementation::collectMidiPortObjects, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::ref(inputs), std::ref(outputs));
 				traverseClientPorts(_sequencer, clientInfo, 0, collectPorts);
 
@@ -121,7 +123,7 @@ void MidiDeviceEnumerator::Implementation::collectClientInformation(snd_seq_t* s
 	devices.emplace(clientName, std::make_tuple(clientId, nullptr));
 }
 
-void MidiDeviceEnumerator::Implementation::collectMidiPortObjects(snd_seq_t*, snd_seq_client_info_t*, snd_seq_port_info_t* portInfo, std::vector<std::shared_ptr<MidiPort> >& inputPorts, std::vector<std::shared_ptr<MidiPort> >& outputPorts)
+void MidiDeviceEnumerator::Implementation::collectMidiPortObjects(snd_seq_t*, snd_seq_client_info_t*, snd_seq_port_info_t* portInfo, std::vector<std::shared_ptr<MidiInPort> >& inputPorts, std::vector<std::shared_ptr<MidiOutPort> >& outputPorts)
 {
 	const int clientId = snd_seq_port_info_get_client(portInfo);
 	const int portId = snd_seq_port_info_get_port(portInfo);
@@ -199,3 +201,4 @@ bool MidiDeviceEnumerator::Implementation::isOurClient(const unsigned char clien
 	return _ourClientIds.count(clientId) != 0;
 }
 
+//! \endcond

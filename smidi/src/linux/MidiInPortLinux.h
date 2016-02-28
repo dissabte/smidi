@@ -1,9 +1,12 @@
 #pragma once
 
+//! \cond INTERNAL
+
 /*!
  * \file MidiInPortLinux.h
- * Contains platfrom-independent part of MIDI input port implementation.
  * \warning This file is not a part of library public interface!
+ *
+ * Contains platfrom-independent part of MIDI input port implementation.
  */
 
 #include "../include/smidi/MidiInPort.h"
@@ -18,10 +21,17 @@
 class MidiInPortLinux : public MidiInPort
 {
 public:
+	//! Forward declaration of internal implementation class
 	class Implementation;
 
+	/*!
+	 * \brief Constructor
+	 * \param implementation actual MidiInPort implementation (e.g. ALSA implementation on Linux)
+	 */
 	explicit MidiInPortLinux(std::unique_ptr<Implementation>&& implementation);
-	virtual ~MidiInPortLinux();
+
+	//! Trivial destructor
+	virtual ~MidiInPortLinux() = default;
 
 	virtual const std::string& name() const override;
 
@@ -31,3 +41,5 @@ public:
 private:
 	std::unique_ptr<Implementation> _impl;
 };
+
+//! \endcond
