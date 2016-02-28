@@ -30,11 +30,13 @@ public:
 	const std::string& name() const;
 
 	void open();
+	void close();
 	bool isOpen() const;
 
-	void close();
-
 	void setCallback(Callback callback);
+
+	void start();
+	void stop();
 
 	int applicationClientId() const;
 

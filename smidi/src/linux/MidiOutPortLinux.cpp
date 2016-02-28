@@ -9,10 +9,9 @@
 #include "alsa/MidiOutPortLinuxImpl.h"
 #endif
 
-
-MidiOutPortLinux::MidiOutPortLinux(const std::string& name, int clientId, int portId)
+MidiOutPortLinux::MidiOutPortLinux(std::unique_ptr<Implementation>&& implementation)
     : MidiOutPort()
-    , _impl(new Implementation(name, clientId, portId))
+    , _impl(std::move(implementation))
 {
 	_impl->open();
 }
@@ -28,10 +27,12 @@ const std::string& MidiOutPortLinux::name() const
 
 void MidiOutPortLinux::start()
 {
+	_impl->start();
 }
 
 void MidiOutPortLinux::stop()
 {
+	_impl->stop();
 }
 
 void MidiOutPortLinux::sendMessage(const MidiMessage& message)
@@ -40,9 +41,4 @@ void MidiOutPortLinux::sendMessage(const MidiMessage& message)
 	{
 		_impl->sendMessage(message);
 	}
-}
-
-int MidiOutPortLinux::applicationClientId() const
-{
-	return _impl->applicationClientId();
 }

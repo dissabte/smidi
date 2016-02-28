@@ -18,7 +18,9 @@
 class MidiOutPortLinux : public MidiOutPort
 {
 public:
-	explicit MidiOutPortLinux(const std::string& name, int clientId, int portId);
+	class Implementation;
+
+	explicit MidiOutPortLinux(std::unique_ptr<Implementation>&& implementation);
 	virtual ~MidiOutPortLinux();
 
 	virtual const std::string& name() const override;
@@ -28,10 +30,7 @@ public:
 
 	virtual void sendMessage(const MidiMessage& message) override;
 
-	int applicationClientId() const;
-
 private:
-	class Implementation;
 	std::unique_ptr<Implementation> _impl;
 };
 

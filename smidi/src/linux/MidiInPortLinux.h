@@ -18,7 +18,9 @@
 class MidiInPortLinux : public MidiInPort
 {
 public:
-	explicit MidiInPortLinux(const std::string& name, int clientId, int portId);
+	class Implementation;
+
+	explicit MidiInPortLinux(std::unique_ptr<Implementation>&& implementation);
 	virtual ~MidiInPortLinux();
 
 	virtual const std::string& name() const override;
@@ -26,9 +28,6 @@ public:
 	virtual void start() override;
 	virtual void stop() override;
 
-	int applicationClientId() const;
-
 private:
-	class Implementation;
 	std::unique_ptr<Implementation> _impl;
 };

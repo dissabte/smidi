@@ -22,6 +22,9 @@ public:
 	void close();
 	bool isOpen() const;
 
+	void start();
+	void stop();
+
 	void sendMessage(const MidiMessage& message);
 
 	int applicationClientId() const;

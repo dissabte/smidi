@@ -110,6 +110,14 @@ bool MidiOutPortLinux::Implementation::isOpen() const
 	return _isOpen;
 }
 
+void MidiOutPortLinux::Implementation::start()
+{
+}
+
+void MidiOutPortLinux::Implementation::stop()
+{
+}
+
 void MidiOutPortLinux::Implementation::sendMessage(const MidiMessage& message)
 {
 	snd_seq_event_t event = {};

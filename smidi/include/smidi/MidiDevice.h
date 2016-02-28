@@ -15,22 +15,17 @@ public:
 	using PortContainer = std::vector<std::shared_ptr<MidiPort>>;
 
 public:
-	explicit MidiDevice(const std::string& name, const PortContainer& inputs, const PortContainer& outputs)
-	    : _name(name)
-	    , _inputPorts(inputs)
-	    , _outputPorts(outputs)
-	{
-	}
+	explicit MidiDevice(const std::string& name, const PortContainer& inputs, const PortContainer& outputs);
 
-	virtual ~MidiDevice() {}
+	virtual ~MidiDevice();
 
-	const std::string& name() const { return _name; }
+	const std::string& name() const;
 
-	const PortContainer& inputPorts() const { return _inputPorts; }
-	const PortContainer& outputPorts() const { return _outputPorts; }
+	const PortContainer& inputPorts() const;
+	const PortContainer& outputPorts() const;
 
 private:
-	std::string _name;
+	std::string   _name;
 	PortContainer _inputPorts;
 	PortContainer _outputPorts;
 };

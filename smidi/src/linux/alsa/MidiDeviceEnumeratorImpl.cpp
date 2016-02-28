@@ -4,8 +4,8 @@
 
 #include "MidiDeviceEnumeratorImpl.h"
 #include "MidiAlsaConstants.h"
-#include "../MidiInPortLinux.h"
-#include "../MidiOutPortLinux.h"
+#include "MidiInPortLinuxImpl.h"
+#include "MidiOutPortLinuxImpl.h"
 #include <algorithm>
 #include <iostream>
 
@@ -121,13 +121,17 @@ void MidiDeviceEnumerator::Implementation::collectMidiPortObjects(snd_seq_t*, sn
 	const unsigned int caps = snd_seq_port_info_get_capability(portInfo);
 	if ((caps & kReadCapabilities) == kReadCapabilities)
 	{
-		inputPorts.emplace_back(std::make_shared<MidiInPortLinux>(portName, clientId, portId));
-		_ourClientIds.insert(static_cast<MidiInPortLinux*>(inputPorts.back().get())->applicationClientId());
+		std::unique_ptr<MidiInPortLinux::Implementation> impl(new MidiInPortLinux::Implementation(portName, clientId, portId));
+		_ourClientIds.insert(impl->applicationClientId());
+
+		inputPorts.emplace_back(std::make_shared<MidiInPortLinux>(std::move(impl)));
 	}
 	if ((caps & kWriteCapabilities) == kWriteCapabilities)
 	{
-		outputPorts.emplace_back(std::make_shared<MidiOutPortLinux>(portName, clientId, portId));
-		_ourClientIds.insert(static_cast<MidiOutPortLinux*>(outputPorts.back().get())->applicationClientId());
+		std::unique_ptr<MidiOutPortLinux::Implementation> impl(new MidiOutPortLinux::Implementation(portName, clientId, portId));
+		_ourClientIds.insert(impl->applicationClientId());
+
+		outputPorts.emplace_back(std::make_shared<MidiOutPortLinux>(std::move(impl)));
 	}
 }
 

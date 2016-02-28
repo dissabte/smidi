@@ -202,6 +202,14 @@ void MidiInPortLinux::Implementation::setCallback(MidiInPortLinux::Implementatio
 	_callback = callback;
 }
 
+void MidiInPortLinux::Implementation::start()
+{
+}
+
+void MidiInPortLinux::Implementation::stop()
+{
+}
+
 int MidiInPortLinux::Implementation::applicationClientId() const
 {
 	return _applicationAddress.client;

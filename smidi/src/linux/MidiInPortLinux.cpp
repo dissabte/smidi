@@ -8,9 +8,9 @@
 #include "alsa/MidiInPortLinuxImpl.h"
 #endif
 
-MidiInPortLinux::MidiInPortLinux(const std::string& name, int clientId, int portId)
+MidiInPortLinux::MidiInPortLinux(std::unique_ptr<Implementation>&& implementation)
     : MidiInPort()
-    , _impl(new Implementation(name, clientId, portId))
+    , _impl(std::move(implementation))
 {
 	_impl->open();
 }
@@ -26,13 +26,10 @@ const std::string& MidiInPortLinux::name() const
 
 void MidiInPortLinux::start()
 {
+	_impl->start();
 }
 
 void MidiInPortLinux::stop()
 {
-}
-
-int MidiInPortLinux::applicationClientId() const
-{
-	return _impl->applicationClientId();
+	_impl->stop();
 }
