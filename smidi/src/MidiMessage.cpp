@@ -3,7 +3,7 @@
  * Contains implementation of MidiMessage class.
  */
 
-#include <../include/smidi/MidiMessage.h>
+#include "../include/smidi/MidiMessage.h"
 #include <algorithm>
 
 MidiMessage::MidiMessage()

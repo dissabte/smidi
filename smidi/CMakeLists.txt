@@ -19,20 +19,31 @@ file(GLOB_RECURSE SMIDI_PRIVATE_INCLUDE_FILES "${SMIDI_SRC_DIR}/*.h")
 
 # TODO: exclude those for osx and win
 
+include_directories(${SMIDI_INC_DIR})
+
 set(SMIDI_SOURCES ${SMIDI_INCLUDE_FILES} ${SMIDI_PRIVATE_INCLUDE_FILES} ${SMIDI_SOURCE_FILES})
 
 if(LINUX)
 	add_definitions(-Wall -Werror)
 endif(LINUX)
 
+# Unit tests
+if(NOT UNITTEST_CPP_FOUND)
+	include(../external/unittest-cpp.cmake)
+endif()
+
+# watcher
+include(../external/watcher.cmake)
+
 add_library(${LIBRARY_NAME} ${SMIDI_SOURCES})
 
 target_include_directories(${LIBRARY_NAME} PUBLIC ${SMIDI_INC_DIR})
 
-target_link_libraries(${LIBRARY_NAME} -lpthread -lasound)
+add_dependencies(${LIBRARY_NAME} UnitTest++ watcher)
+
+target_link_libraries(${LIBRARY_NAME} -lpthread -lasound watcher)
 
 # Unit tests
-include(../external/unittest-cpp.cmake)
 if(UNITTEST_CPP_FOUND)
 	add_subdirectory("tests")
 endif()

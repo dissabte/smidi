@@ -8,6 +8,7 @@
 #include "../../../include/smidi/MidiDeviceEnumerator.h"
 #include "../../../include/smidi/MidiDevice.h"
 #include "../../../include/smidi/MidiPort.h"
+#include <watcher/DeviceWatcher.h>
 #include <map>
 #include <set>
 #include <tuple>
@@ -53,8 +54,11 @@ private:
 
 	bool isOurClient(const unsigned char clientId) const;
 
+	void onUSBDevicesChanged(const DeviceNotificationType& notification, const DeviceNotificationData&);
+
 private:
 	DeviceMap     _deviceMap;
+	DeviceWatcher _watcher;
 	std::set<int> _ourClientIds;
 	snd_seq_t*    _sequencer;
 	unsigned char _myClientId;

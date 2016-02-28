@@ -14,7 +14,8 @@ const int MidiDeviceEnumerator::Implementation::kReadCapabilities = SND_SEQ_PORT
 
 
 MidiDeviceEnumerator::Implementation::Implementation()
-	: _sequencer(nullptr)
+    : _watcher(DeviceWatcher(DeviceWatcher::USB_ALL))
+    , _sequencer(nullptr)
 {
 	int error = snd_seq_open(&_sequencer, "default", SND_SEQ_OPEN_OUTPUT, SND_SEQ_NONBLOCK);
 	if (MidiAlsaConstants::kNoError == error)
@@ -23,6 +24,8 @@ MidiDeviceEnumerator::Implementation::Implementation()
 		snd_seq_set_client_name(_sequencer, "MIDI Device Enumerator");
 
 		_myClientId  = snd_seq_client_id(_sequencer);
+
+		_watcher.registerObserver(std::bind(&MidiDeviceEnumerator::Implementation::onUSBDevicesChanged, this, std::placeholders::_1, std::placeholders::_2));
 
 		refreshDevices();
 	}
@@ -95,6 +98,7 @@ void MidiDeviceEnumerator::Implementation::clearDevices()
 
 void MidiDeviceEnumerator::Implementation::refreshDevices()
 {
+	clearDevices();
 	updateAllDeviceInformation(_deviceMap);
 }
 
@@ -187,4 +191,17 @@ void MidiDeviceEnumerator::Implementation::traverseClientPorts(snd_seq_t* sequen
 bool MidiDeviceEnumerator::Implementation::isOurClient(const unsigned char clientId) const
 {
 	return _ourClientIds.count(clientId) != 0;
+}
+
+void MidiDeviceEnumerator::Implementation::onUSBDevicesChanged(const DeviceNotificationType& notification, const DeviceNotificationData&)
+{
+	switch (notification)
+	{
+	case DeviceNotificationType::DEVICE_ADDED:
+	case DeviceNotificationType::DEVICE_REMOVED:
+		refreshDevices();
+		break;
+	default:
+		break;
+	}
 }
