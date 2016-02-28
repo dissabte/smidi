@@ -184,7 +184,6 @@ void MidiInPortLinux::Implementation::close()
 		{
 			_poll = false;
 			unsigned char stop = 1;
-			//ssize_t bytesWritten = ::write(_pipefd[1], &stop, sizeof(stop));
 			::write(_pipefd[1], &stop, sizeof(stop));
 			_thread.join();
 		}
