@@ -15,8 +15,8 @@
 class MidiSync
 {
 public:
-	explicit MidiSync();
-	virtual ~MidiSync();
+	explicit MidiSync() = default;
+	virtual ~MidiSync() = default;
 
 	//! Starts sending MIDI Clocks
 	virtual void startSync(double bpm) = 0;

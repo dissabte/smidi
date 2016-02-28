@@ -10,6 +10,7 @@
  */
 
 #include "../../include/smidi/MidiOutPort.h"
+#include "MidiSyncLinux.h"
 #include <memory>
 
 /*!
@@ -32,6 +33,8 @@ public:
 	virtual void stop() override;
 
 	virtual void sendMessage(const MidiMessage& message) override;
+
+	virtual MidiSync& sync() override;
 
 private:
 	std::unique_ptr<Implementation> _impl;

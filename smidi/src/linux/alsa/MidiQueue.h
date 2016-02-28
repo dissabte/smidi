@@ -40,6 +40,10 @@ public:
 	bool isValid() const;
 	operator int() const;
 
+	void enqueueMidiMessage(const snd_seq_event_type messageType, const int sourcePort, const snd_seq_tick_time_t& tick);
+	void enqueueMidiSyncEvents(const int sourcePort, const bool includeMidiStart, const bool includeSongPositionReset, const unsigned int numberOfMidiClocks);
+	unsigned int timeToSendInMicroseconds(const unsigned int numberOfMessages, const unsigned int deltaTimeInTicks, const double bpm) const;
+
 private:
 	unsigned int convertBPMToMicroseconds(double bpm) const;
 

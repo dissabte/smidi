@@ -9,13 +9,15 @@
  */
 
 #include "../../include/smidi/MidiSync.h"
+#include <memory>
 
-
-class MidiSyncImpl : public MidiSync
+class MidiSyncLinux : public MidiSync
 {
 public:
-	explicit MidiSyncImpl();
-	virtual ~MidiSyncImpl();
+	class Implementation;
+	
+	explicit MidiSyncLinux(std::unique_ptr<Implementation>&& implementation);
+	virtual ~MidiSyncLinux();
 
 	virtual void startSync(double bpm) override;
 	virtual void stopSync() override;
@@ -23,6 +25,9 @@ public:
 	virtual void changeSyncBpm(double bpm) override;
 	virtual bool isSyncStarted() const override;
 	virtual double syncInitialLatencyForTempo(double bpm) const override;
+
+private:
+	std::unique_ptr<Implementation> _impl;
 };
 
 //! \endcond

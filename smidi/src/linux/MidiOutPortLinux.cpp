@@ -47,4 +47,9 @@ void MidiOutPortLinux::sendMessage(const MidiMessage& message)
 	}
 }
 
+MidiSync& MidiOutPortLinux::sync()
+{
+	return _impl->sync();
+}
+
 //! \endcond

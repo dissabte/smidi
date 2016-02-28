@@ -9,6 +9,7 @@
 
 #include "../MidiOutPortLinux.h"
 #include "MidiEventEncoder.h"
+#include "MidiSyncLinuxImpl.h"
 #include <alsa/asoundlib.h>
 
 class MidiOutPortLinux::Implementation
@@ -30,7 +31,12 @@ public:
 
 	void sendMessage(const MidiMessage& message);
 
+	MidiSync& sync();
+
 	int applicationClientId() const;
+
+public:
+	snd_seq_t* sequencer() const;
 
 private:
 	std::string               _name;
@@ -39,6 +45,7 @@ private:
 	snd_seq_t*                _sequencer;
 	snd_seq_port_subscribe_t* _subscription;
 	MidiEventEncoder          _encoder;
+	MidiSyncLinux             _sync;
 	bool                      _isOpen;
 };
 

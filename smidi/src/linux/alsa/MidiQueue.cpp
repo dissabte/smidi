@@ -89,6 +89,48 @@ MidiQueue::operator int() const
 	return _id;
 }
 
+void MidiQueue::enqueueMidiMessage(const snd_seq_event_type messageType, const int sourcePort, const snd_seq_tick_time_t& tick)
+{
+	snd_seq_event_t event = {};
+	event.type = messageType;
+	snd_seq_ev_schedule_tick(&event, _id, 1, tick);
+	snd_seq_ev_set_source(&event, sourcePort);
+	snd_seq_ev_set_subs(&event);
+	snd_seq_event_output_direct(_sequencer, &event);
+}
+
+void MidiQueue::enqueueMidiSyncEvents(const int sourcePort, bool includeMidiStart, bool includeSongPositionReset, unsigned int numberOfMidiClocks)
+{
+	snd_seq_tick_time_t tick = 0;
+	if (includeMidiStart)
+	{
+		enqueueMidiMessage(SND_SEQ_EVENT_START, sourcePort, tick);
+		++tick;
+	}
+
+	if (includeSongPositionReset)
+	{
+		enqueueMidiMessage(SND_SEQ_EVENT_SONGPOS, sourcePort, tick);
+		++tick;
+	}
+
+	for (unsigned int eventIndex = 0; eventIndex < numberOfMidiClocks;)
+	{
+		enqueueMidiMessage(SND_SEQ_EVENT_CLOCK, sourcePort, tick);
+		++tick;
+	}
+	snd_seq_drain_output(_sequencer);
+}
+
+unsigned int MidiQueue::timeToSendInMicroseconds(const unsigned int numberOfMessages, const unsigned int deltaTimeInTicks, const double bpm) const
+{
+	const unsigned int microsecondsPerQuarterNote = convertBPMToMicroseconds(bpm);
+	const unsigned int microsecondsPerTick = microsecondsPerQuarterNote / kPPQN;
+	const unsigned int ticks = numberOfMessages * deltaTimeInTicks;
+	const unsigned int timeToSend = ticks * microsecondsPerTick;
+	return timeToSend;
+}
+
 unsigned int MidiQueue::convertBPMToMicroseconds(double bpm) const
 {
 	if (bpm < 1.0)
