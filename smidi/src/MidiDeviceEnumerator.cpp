@@ -22,12 +22,17 @@ MidiDeviceEnumerator::~MidiDeviceEnumerator()
 {
 }
 
-std::list<std::string> MidiDeviceEnumerator::deviceNames()
+std::list<std::string> MidiDeviceEnumerator::deviceNames() const
 {
 	return _impl->deviceNames();
 }
 
-std::shared_ptr<MidiDevice> MidiDeviceEnumerator::createDevice(const std::string& name)
+std::shared_ptr<MidiDevice> MidiDeviceEnumerator::createDevice(const std::string& name) const
 {
 	return _impl->createDevice(name);
+}
+
+void MidiDeviceEnumerator::updateDeviceList()
+{
+	_impl->updateDeviceList();
 }

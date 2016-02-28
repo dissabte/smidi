@@ -2,10 +2,12 @@
 #include <smidi/MidiDeviceEnumerator.h>
 #include <smidi/MidiInPort.h>
 #include <smidi/MidiOutPort.h>
+#include <watcher/DeviceWatcher.h>
+#include <iostream>
 
-int main()
+
+void printDevices(const MidiDeviceEnumerator& enumerator)
 {
-	MidiDeviceEnumerator enumerator;
 	std::cout << "Found MIDI devices:\n";
 	for (const std::string& deviceName : enumerator.deviceNames())
 	{
@@ -21,6 +23,26 @@ int main()
 			std::cout << "\t  OUT: " << port->name() << std::endl;
 		}
 	}
-	std::cout << "Done\n";
+	std::cout << "Done. You can plug in/out some USB/MIDI device now OR press Enter to quit...\n";
+}
+
+int main()
+{
+	MidiDeviceEnumerator enumerator;
+
+	printDevices(enumerator);
+
+	DeviceWatcher watcher(DeviceWatcher::USB_ALL);
+	watcher.registerObserver([&enumerator](const DeviceNotificationType& notification, const DeviceNotificationData&)
+	{
+		if (notification == DeviceNotificationType::DEVICE_ADDED ||
+		    notification == DeviceNotificationType::DEVICE_REMOVED)
+		{
+			enumerator.updateDeviceList();
+			printDevices(enumerator);
+		}
+	});
+
+	std::cin.ignore();
 	return 0;
 }

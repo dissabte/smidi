@@ -14,8 +14,8 @@ const int MidiDeviceEnumerator::Implementation::kReadCapabilities = SND_SEQ_PORT
 
 
 MidiDeviceEnumerator::Implementation::Implementation()
-    : _watcher(DeviceWatcher(DeviceWatcher::USB_ALL))
-    , _sequencer(nullptr)
+    : _sequencer(nullptr)
+    , _myClientId(MidiAlsaConstants::kInvalidId)
 {
 	int error = snd_seq_open(&_sequencer, "default", SND_SEQ_OPEN_OUTPUT, SND_SEQ_NONBLOCK);
 	if (MidiAlsaConstants::kNoError == error)
@@ -24,8 +24,6 @@ MidiDeviceEnumerator::Implementation::Implementation()
 		snd_seq_set_client_name(_sequencer, "MIDI Device Enumerator");
 
 		_myClientId  = snd_seq_client_id(_sequencer);
-
-		_watcher.registerObserver(std::bind(&MidiDeviceEnumerator::Implementation::onUSBDevicesChanged, this, std::placeholders::_1, std::placeholders::_2));
 
 		refreshDevices();
 	}
@@ -43,7 +41,7 @@ MidiDeviceEnumerator::Implementation::~Implementation()
 	}
 }
 
-std::list<std::string> MidiDeviceEnumerator::Implementation::deviceNames()
+std::list<std::string> MidiDeviceEnumerator::Implementation::deviceNames() const
 {
 	std::list<std::string> result;
 
@@ -80,6 +78,9 @@ std::shared_ptr<MidiDevice> MidiDeviceEnumerator::Implementation::createDevice(c
 				traverseClientPorts(_sequencer, clientInfo, 0, collectPorts);
 
 				result = std::make_shared<MidiDevice>(deviceName, inputs, outputs);
+
+				// cache the device object
+				_deviceMap[deviceName] = std::make_tuple(clientId, result);
 			}
 			else
 			{
@@ -88,6 +89,11 @@ std::shared_ptr<MidiDevice> MidiDeviceEnumerator::Implementation::createDevice(c
 		}
 	}
 	return result;
+}
+
+void MidiDeviceEnumerator::Implementation::updateDeviceList()
+{
+	refreshDevices();
 }
 
 void MidiDeviceEnumerator::Implementation::clearDevices()
@@ -193,15 +199,3 @@ bool MidiDeviceEnumerator::Implementation::isOurClient(const unsigned char clien
 	return _ourClientIds.count(clientId) != 0;
 }
 
-void MidiDeviceEnumerator::Implementation::onUSBDevicesChanged(const DeviceNotificationType& notification, const DeviceNotificationData&)
-{
-	switch (notification)
-	{
-	case DeviceNotificationType::DEVICE_ADDED:
-	case DeviceNotificationType::DEVICE_REMOVED:
-		refreshDevices();
-		break;
-	default:
-		break;
-	}
-}

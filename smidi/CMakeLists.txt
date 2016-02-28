@@ -32,21 +32,17 @@ if(NOT UNITTEST_CPP_FOUND)
 	include(../external/unittest-cpp.cmake)
 endif()
 
-# watcher
-include(../external/watcher.cmake)
-
 add_library(${LIBRARY_NAME} ${SMIDI_SOURCES})
 
 target_include_directories(${LIBRARY_NAME} PUBLIC ${SMIDI_INC_DIR})
 
-add_dependencies(${LIBRARY_NAME} UnitTest++ watcher)
-
-target_link_libraries(${LIBRARY_NAME} -lpthread -lasound watcher)
-
 # Unit tests
 if(UNITTEST_CPP_FOUND)
+	add_dependencies(${LIBRARY_NAME} UnitTest++)
 	add_subdirectory("tests")
 endif()
+
+target_link_libraries(${LIBRARY_NAME} -lpthread -lasound)
 
 # demo app
 add_subdirectory("tests/demo")
