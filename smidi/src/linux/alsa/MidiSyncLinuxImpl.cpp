@@ -10,6 +10,9 @@
 #include <pthread.h>
 #include <iostream>
 
+const unsigned int MidiSyncLinux::Implementation::kPPQN = 24;
+
+
 MidiSyncLinux::Implementation::Implementation(MidiOutPortLinux::Implementation& midiOut)
     : _midiOutPort(midiOut)
     , _queue()
@@ -18,45 +21,61 @@ MidiSyncLinux::Implementation::Implementation(MidiOutPortLinux::Implementation& 
     , _threadIsCreated(false)
     , _pause(false)
     , _resume(false)
-    , _updateBpm(false)
+    , _changeBpm(false)
     , _restart(false)
     , _exit(false)
 {
 	_queue.init(midiOut.sequencer());
+	startSyncThread();
 }
 
 MidiSyncLinux::Implementation::~Implementation()
 {
+	stopSyncThread();
 }
 
 void MidiSyncLinux::Implementation::startSync(double bpm)
 {
-
+	_bpm = bpm;
+	_restart = true;
+	resumeSync();
 }
 
 void MidiSyncLinux::Implementation::stopSync()
 {
-
+	if (_syncIsStarted)
+	{
+		_pause = true;
+		_syncIsStarted = false;
+	}
 }
 
 void MidiSyncLinux::Implementation::resumeSync()
 {
-
+	if (!_syncIsStarted)
+	{
+		_resume = true;
+		_resumeCondition.notify_one();
+		_syncIsStarted = true;
+	}
 }
 
 void MidiSyncLinux::Implementation::changeSyncBpm(double bpm)
 {
-
+	_bpm = bpm;
+	_changeBpm = true;
 }
 
 bool MidiSyncLinux::Implementation::isSyncStarted() const
 {
-
+	return _threadIsCreated && _syncIsStarted;
 }
 
-double MidiSyncLinux::Implementation::syncInitialLatencyForTempo(double bpm) const
+std::chrono::microseconds MidiSyncLinux::Implementation::syncInitialLatencyForTempo(double bpm) const
 {
-
+	std::chrono::microseconds beatDuration(static_cast<unsigned long long>(6e7 / bpm));
+	std::chrono::microseconds clockDuration(beatDuration / kPPQN);
+	return 2 * clockDuration; // MIDI Start and MIDI Sond Position Pointer are sent before first MIDI Clock
 }
 
 void MidiSyncLinux::Implementation::startSyncThread()
@@ -68,24 +87,28 @@ void MidiSyncLinux::Implementation::startSyncThread()
 		_thread = std::thread(&MidiSyncLinux::Implementation::syncThread, this);
 		if (_thread.joinable())
 		{
-			sched_param param  = {};
+			sched_param param = {};
 			param.sched_priority = sched_get_priority_max(SCHED_FIFO);
 			int error = pthread_setschedparam(_thread.native_handle(), SCHED_FIFO, &param);
-			if (MidiAlsaConstants::kNoError == error)
-			{
-
-			}
-			else
+			if (MidiAlsaConstants::kNoError != error)
 			{
 				std::cerr << "Couldn't set sync thread priority\n";
 			}
-
 			_threadIsCreated = true;
 		}
 		else
 		{
 			std::cerr << "Couldn't start sync thread\n";
 		}
+	}
+}
+
+void MidiSyncLinux::Implementation::stopSyncThread()
+{
+	if (_threadIsCreated)
+	{
+		_exit = true;
+		_thread.join();
 	}
 }
 
@@ -97,6 +120,7 @@ void MidiSyncLinux::Implementation::syncThread()
 		_pause = false;
 		std::unique_lock<std::mutex> lock(_pauseMutex);
 		_resumeCondition.wait(lock, [this]{ return _resume.load(); });
+		_resume = false;
 	}
 
 	// initial setup
@@ -105,7 +129,7 @@ void MidiSyncLinux::Implementation::syncThread()
 	std::chrono::time_point<std::chrono::high_resolution_clock> now;
 	std::chrono::time_point<std::chrono::high_resolution_clock> plannedSendingTime;
 
-	auto syncStateChanged = [this]{ return (_exit || _pause || _updateBpm || _restart); };
+	auto syncStateChanged = [this]{ return (_exit || _pause || _changeBpm || _restart); };
 
 	while (true)
 	{
@@ -144,12 +168,14 @@ void MidiSyncLinux::Implementation::syncThread()
 		{
 			if (_pause)
 			{
+				_pause = false;
+
 				// TODO: stop sending
 				_queue.stop();
 
-				_pause = false;
 				std::unique_lock<std::mutex> lock(_pauseMutex);
 				_resumeCondition.wait(lock, [this]()->bool { return _resume; });
+				_resume = false;
 
 				// TODO: could be some new setup of midi messages or whatever
 				_queue.enqueueMidiSyncEvents(_sourcePort, true, true, kPPQN);
@@ -163,8 +189,10 @@ void MidiSyncLinux::Implementation::syncThread()
 				break;
 			}
 
-			if (_updateBpm)
+			if (_changeBpm)
 			{
+				_changeBpm = false;
+
 				// TODO: stop sending
 				_queue.stop();
 
@@ -178,6 +206,8 @@ void MidiSyncLinux::Implementation::syncThread()
 
 			if (_restart)
 			{
+				_restart = false;
+
 				// TODO: stop sending
 				_queue.stop();
 

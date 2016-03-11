@@ -22,7 +22,7 @@
 
 class MidiSyncLinux::Implementation
 {
-	constexpr static unsigned int kPPQN = 24;
+	static const unsigned int kPPQN;
 
 public:
 	Implementation(MidiOutPortLinux::Implementation& midiOut);
@@ -33,10 +33,11 @@ public:
 	void resumeSync();
 	void changeSyncBpm(double bpm);
 	bool isSyncStarted() const;
-	double syncInitialLatencyForTempo(double bpm) const;
+	std::chrono::microseconds syncInitialLatencyForTempo(double bpm) const;
 
 private:
 	void startSyncThread();
+	void stopSyncThread();
 	void syncThread();
 
 	static void preciseWaitUntil(const std::chrono::time_point<std::chrono::high_resolution_clock>& timePoint);
@@ -50,10 +51,11 @@ private:
 
 	std::thread             _thread;
 	bool                    _threadIsCreated;
+	bool                    _syncIsStarted;
 
 	std::atomic<bool>       _pause;
 	std::atomic<bool>       _resume;
-	std::atomic<bool>       _updateBpm;
+	std::atomic<bool>       _changeBpm;
 	std::atomic<bool>       _restart;
 	std::atomic<bool>       _exit;
 

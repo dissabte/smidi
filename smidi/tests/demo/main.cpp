@@ -22,6 +22,7 @@ void printDevices(const MidiDeviceEnumerator& enumerator)
 		for (const std::shared_ptr<MidiOutPort>& port : device->outputPorts())
 		{
 			std::cout << "\t  OUT: " << port->name() << std::endl;
+			port->sync().startSync(120.0);
 		}
 	}
 	std::cout << "Done. You can plug in/out some USB/MIDI device now OR press Enter to quit...\n";

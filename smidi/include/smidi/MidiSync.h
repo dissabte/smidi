@@ -6,6 +6,7 @@
  */
 
 #include <memory>
+#include <chrono>
 
 /*!
  * \brief Interface class for MidiSync platform specific implementations
@@ -34,5 +35,5 @@ public:
 	virtual bool isSyncStarted() const = 0;
 
 	//! Returns the delay between syncStart() call and first the actual MIDI Clock event
-	virtual double syncInitialLatencyForTempo(double bpm) const = 0;
+	virtual std::chrono::microseconds syncInitialLatencyForTempo(double bpm) const = 0;
 };

@@ -16,7 +16,6 @@ MidiOutPortLinux::Implementation::Implementation(const std::string& name, int cl
     , _sequencer(nullptr)
     , _subscription(nullptr)
     , _encoder(kInitialBufferSize)
-    , _sync(std::unique_ptr<MidiSyncLinux::Implementation>(new MidiSyncLinux::Implementation(*this)))
     , _isOpen(false)
 {
 	// open ALSA sequencer client
@@ -26,6 +25,7 @@ MidiOutPortLinux::Implementation::Implementation(const std::string& name, int cl
 		snd_seq_set_client_name(_sequencer, name.c_str());
 
 		_applicationAddress.client = snd_seq_client_id(_sequencer);
+		_sync.initialize(std::unique_ptr<MidiSyncLinux::Implementation>(new MidiSyncLinux::Implementation(*this)));
 	}
 	else
 	{

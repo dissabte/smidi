@@ -11,14 +11,18 @@
 #include "alsa/MidiSyncLinuxImpl.h"
 #endif
 
-MidiSyncLinux::MidiSyncLinux(std::unique_ptr<Implementation>&& implementation)
+MidiSyncLinux::MidiSyncLinux()
     : MidiSync()
-    , _impl(std::move(implementation))
 {
 }
 
 MidiSyncLinux::~MidiSyncLinux()
 {
+}
+
+void MidiSyncLinux::initialize(std::unique_ptr<MidiSyncLinux::Implementation>&& implementation)
+{
+	_impl = std::move(implementation);
 }
 
 void MidiSyncLinux::startSync(double bpm)
@@ -46,7 +50,7 @@ bool MidiSyncLinux::isSyncStarted() const
 	return _impl->isSyncStarted();
 }
 
-double MidiSyncLinux::syncInitialLatencyForTempo(double bpm) const
+std::chrono::microseconds MidiSyncLinux::syncInitialLatencyForTempo(double bpm) const
 {
 	return _impl->syncInitialLatencyForTempo(bpm);
 }
