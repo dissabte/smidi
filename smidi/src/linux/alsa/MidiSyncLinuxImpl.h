@@ -24,6 +24,8 @@ class MidiSyncLinux::Implementation
 {
 	static const unsigned int kPPQN;
 
+	friend void* syncThreadFunction(void*);
+
 public:
 	Implementation(MidiOutPortLinux::Implementation& midiOut);
 	~Implementation();
@@ -49,7 +51,7 @@ private:
 	std::atomic<int>        _sourcePort;
 	double                  _bpm;
 
-	std::thread             _thread;
+	pthread_t               _thread;
 	bool                    _threadIsCreated;
 	bool                    _syncIsStarted;
 

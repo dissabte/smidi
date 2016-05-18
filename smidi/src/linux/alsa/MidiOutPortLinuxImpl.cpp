@@ -25,7 +25,6 @@ MidiOutPortLinux::Implementation::Implementation(const std::string& name, int cl
 		snd_seq_set_client_name(_sequencer, name.c_str());
 
 		_applicationAddress.client = snd_seq_client_id(_sequencer);
-		_sync.initialize(std::unique_ptr<MidiSyncLinux::Implementation>(new MidiSyncLinux::Implementation(*this)));
 	}
 	else
 	{
@@ -69,6 +68,7 @@ void MidiOutPortLinux::Implementation::open()
 				if (MidiAlsaConstants::kNoError == snd_seq_subscribe_port(_sequencer, _subscription))
 				{
 					_isOpen = true;
+					_sync.initialize(std::unique_ptr<MidiSyncLinux::Implementation>(new MidiSyncLinux::Implementation(*this)));
 				}
 				else
 				{
@@ -151,6 +151,11 @@ MidiSync& MidiOutPortLinux::Implementation::sync()
 int MidiOutPortLinux::Implementation::applicationClientId() const
 {
 	return _applicationAddress.client;
+}
+
+int MidiOutPortLinux::Implementation::applicationPortId() const
+{
+	return _applicationAddress.port;
 }
 
 snd_seq_t*MidiOutPortLinux::Implementation::sequencer() const

@@ -16,7 +16,7 @@ const unsigned int MidiSyncLinux::Implementation::kPPQN = 24;
 MidiSyncLinux::Implementation::Implementation(MidiOutPortLinux::Implementation& midiOut)
     : _midiOutPort(midiOut)
     , _queue()
-    , _sourcePort(MidiAlsaConstants::kInvalidId)
+    , _sourcePort(midiOut.applicationPortId())
     , _bpm(120.0)
     , _threadIsCreated(false)
     , _pause(false)
@@ -78,27 +78,46 @@ std::chrono::microseconds MidiSyncLinux::Implementation::syncInitialLatencyForTe
 	return 2 * clockDuration; // MIDI Start and MIDI Sond Position Pointer are sent before first MIDI Clock
 }
 
+void* syncThreadFunction(void* param)
+{
+	MidiSyncLinux::Implementation* sync = reinterpret_cast<MidiSyncLinux::Implementation*>(param);
+	if (sync)
+	{
+		sync->syncThread();
+	}
+	return nullptr;
+}
+
 void MidiSyncLinux::Implementation::startSyncThread()
 {
 	if (!_threadIsCreated)
 	{
 		_pause.store(true); // to pause thread until sync is actually started
 
-		_thread = std::thread(&MidiSyncLinux::Implementation::syncThread, this);
-		if (_thread.joinable())
+		pthread_attr_t attr = {};
+		int err = pthread_attr_init(&attr);
+		if (err == MidiAlsaConstants::kNoError)
 		{
 			sched_param param = {};
-			param.sched_priority = sched_get_priority_max(SCHED_FIFO);
-			int error = pthread_setschedparam(_thread.native_handle(), SCHED_FIFO, &param);
-			if (MidiAlsaConstants::kNoError != error)
+			param.sched_priority = 1;
+			pthread_attr_setschedparam(&attr, &param);
+			pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
+			pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+			pthread_t threadId;
+			err = pthread_create(&threadId, &attr, syncThreadFunction, reinterpret_cast<void*>(this));
+			if (err == MidiAlsaConstants::kNoError)
 			{
-				std::cerr << "Couldn't set sync thread priority\n";
+				std::cerr << "All cool\n";
 			}
-			_threadIsCreated = true;
+			else
+			{
+				perror("pthread_create");
+			}
 		}
 		else
 		{
-			std::cerr << "Couldn't start sync thread\n";
+			perror("pthread_attr_init");
 		}
 	}
 }
@@ -108,7 +127,7 @@ void MidiSyncLinux::Implementation::stopSyncThread()
 	if (_threadIsCreated)
 	{
 		_exit = true;
-		_thread.join();
+		pthread_join(_thread, nullptr);
 	}
 }
 
@@ -124,12 +143,17 @@ void MidiSyncLinux::Implementation::syncThread()
 	}
 
 	// initial setup
-	_queue.enqueueMidiSyncEvents(_sourcePort, true, true, kPPQN);
+	_queue.setTempo(_bpm);
+	_queue.start();
 
 	std::chrono::time_point<std::chrono::high_resolution_clock> now;
 	std::chrono::time_point<std::chrono::high_resolution_clock> plannedSendingTime;
+	std::chrono::microseconds compensation = std::chrono::microseconds(0);
+	std::chrono::microseconds timeToSendPackets = std::chrono::microseconds(static_cast<int>(60000000.0 / _bpm));
 
 	auto syncStateChanged = [this]{ return (_exit || _pause || _changeBpm || _restart); };
+
+	bool sendStart = true;
 
 	while (true)
 	{
@@ -150,19 +174,24 @@ void MidiSyncLinux::Implementation::syncThread()
 				if (now > plannedSendingTime)
 				{
 					// "we are late", so we add this value to overall compensation
-					//compensation += delta;
+					compensation += std::chrono::duration_cast<std::chrono::microseconds>(now - plannedSendingTime);
 				}
 				else
 				{
 					// "we are early" and we will send next buffer as planned
-					//now = plannedSendingTime;
+					now = plannedSendingTime;
+				}
+
+				if (compensation > std::chrono::microseconds(5))
+				{
+					// TODO: we are 5+ microseconds late, we need to compensate this until it gets noticeable
+					compensation = std::chrono::microseconds(0);
 				}
 			}
 
-			// TODO: calculate new plannedSendingTime = now + time-to-send-clocks
+			plannedSendingTime = now + timeToSendPackets;
 
-			// TODO: send
-			_queue.start();
+			_queue.enqueueMidiSyncEvents(_sourcePort, sendStart, sendStart, kPPQN);
 		}
 		else
 		{
@@ -170,21 +199,20 @@ void MidiSyncLinux::Implementation::syncThread()
 			{
 				_pause = false;
 
-				// TODO: stop sending
 				_queue.stop();
 
 				std::unique_lock<std::mutex> lock(_pauseMutex);
 				_resumeCondition.wait(lock, [this]()->bool { return _resume; });
 				_resume = false;
 
-				// TODO: could be some new setup of midi messages or whatever
-				_queue.enqueueMidiSyncEvents(_sourcePort, true, true, kPPQN);
+				sendStart = true;
+
+				_queue.start();
 				continue;
 			}
 
 			if (_exit)
 			{
-				// TODO: stop sending
 				_queue.stop();
 				break;
 			}
@@ -193,14 +221,14 @@ void MidiSyncLinux::Implementation::syncThread()
 			{
 				_changeBpm = false;
 
-				// TODO: stop sending
 				_queue.stop();
 
-				// TODO: change queue tempo (can this be done w/o stop?)
-				_queue.changeTempo(_bpm);
+				_queue.setTempo(_bpm);
+				timeToSendPackets = std::chrono::microseconds(static_cast<int>(60000000.0 / _bpm));
 
-				// TODO: don't forget about possible time drift
 				plannedSendingTime = std::chrono::time_point<std::chrono::high_resolution_clock>();
+
+				_queue.start();
 				continue;
 			}
 
@@ -208,24 +236,23 @@ void MidiSyncLinux::Implementation::syncThread()
 			{
 				_restart = false;
 
-				// TODO: stop sending
 				_queue.stop();
 
-				// TODO: initialize midi clocks
-				_queue.enqueueMidiSyncEvents(_sourcePort, true, true, kPPQN);
+				sendStart = true;
 
 				plannedSendingTime = std::chrono::time_point<std::chrono::high_resolution_clock>();
+
+				_queue.start();
 				continue;
 			}
 		}
 
-		// TODO: calc time to wait for packets
-		std::chrono::time_point<std::chrono::high_resolution_clock> endTime = now + std::chrono::time_point<std::chrono::high_resolution_clock>::duration::zero();
+		std::chrono::time_point<std::chrono::high_resolution_clock> endTime = now + timeToSendPackets;
 
-		// TODO: possibly update midi clocks to not send midi start/spp again
-		//_queue.enqueueMidiSyncEvents(_sourcePort, false, false, kPPQN);
-
-		// TODO: precise wait for packets
+		if (sendStart)
+		{
+			sendStart = false;
+		}
 		preciseWaitUntil(endTime);
 	}
 }

@@ -34,6 +34,7 @@ public:
 	MidiSync& sync();
 
 	int applicationClientId() const;
+	int applicationPortId() const;
 
 public:
 	snd_seq_t* sequencer() const;

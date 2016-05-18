@@ -114,7 +114,7 @@ void MidiQueue::enqueueMidiSyncEvents(const int sourcePort, bool includeMidiStar
 		++tick;
 	}
 
-	for (unsigned int eventIndex = 0; eventIndex < numberOfMidiClocks;)
+	for (unsigned int eventIndex = 0; eventIndex < numberOfMidiClocks; ++eventIndex)
 	{
 		enqueueMidiMessage(SND_SEQ_EVENT_CLOCK, sourcePort, tick);
 		++tick;
