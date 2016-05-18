@@ -34,7 +34,7 @@ int main()
 
 	printDevices(enumerator);
 
-	DeviceWatcher watcher(DeviceWatcher::USB_ALL);
+	DeviceWatcher watcher(DeviceWatcher::USB);
 	watcher.registerObserver([&enumerator](const DeviceNotificationType& notification, const DeviceNotificationData&)
 	{
 		if (notification == DeviceNotificationType::DEVICE_ADDED ||
