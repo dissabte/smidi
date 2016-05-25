@@ -49,6 +49,8 @@ add_subdirectory("demo")
 
 # Doxygen
 set(SMIDI_DOCUMENTATION_DIR "docs")
-include(${SMIDI_DOCUMENTATION_DIR}/doxygen.cmake)
+if (EXISTS "${SMIDI_DOCUMENTATION_DIR}/doxygen.cmake")
+	include(${SMIDI_DOCUMENTATION_DIR}/doxygen.cmake)
+endif()
 
 message(STATUS "Processing ${LIBRARY_NAME} done")
