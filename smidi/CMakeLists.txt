@@ -45,7 +45,7 @@ endif()
 target_link_libraries(${LIBRARY_NAME} -lpthread -lasound)
 
 # demo app
-add_subdirectory("tests/demo")
+add_subdirectory("demo")
 
 # Doxygen
 set(SMIDI_DOCUMENTATION_DIR "docs")

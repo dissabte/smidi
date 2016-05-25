@@ -106,11 +106,7 @@ void MidiSyncLinux::Implementation::startSyncThread()
 
 			pthread_t threadId;
 			err = pthread_create(&threadId, &attr, syncThreadFunction, reinterpret_cast<void*>(this));
-			if (err == MidiAlsaConstants::kNoError)
-			{
-				std::cerr << "All cool\n";
-			}
-			else
+			if (err != MidiAlsaConstants::kNoError)
 			{
 				perror("pthread_create");
 			}
