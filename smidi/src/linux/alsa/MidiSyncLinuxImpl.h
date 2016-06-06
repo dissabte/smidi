@@ -23,6 +23,7 @@
 class MidiSyncLinux::Implementation
 {
 	static const unsigned int kPPQN;
+	static const std::chrono::microseconds kMicrosecondsInAMinute;
 
 	friend void* syncThreadFunction(void*);
 
@@ -40,6 +41,7 @@ public:
 private:
 	void startSyncThread();
 	void stopSyncThread();
+	void compensateLatency(std::chrono::time_point<std::chrono::high_resolution_clock>& now, std::chrono::time_point<std::chrono::high_resolution_clock>& plannedSendingTime, bool& compensationHappened, std::chrono::microseconds& compensation);
 	void syncThread();
 
 	static void preciseWaitUntil(const std::chrono::time_point<std::chrono::high_resolution_clock>& timePoint);

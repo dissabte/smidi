@@ -12,6 +12,7 @@
 
 const unsigned int MidiSyncLinux::Implementation::kPPQN = 24;
 
+const std::chrono::microseconds MidiSyncLinux::Implementation::kMicrosecondsInAMinute = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::minutes(1));
 
 MidiSyncLinux::Implementation::Implementation(MidiOutPortLinux::Implementation& midiOut)
     : _midiOutPort(midiOut)
@@ -73,7 +74,7 @@ bool MidiSyncLinux::Implementation::isSyncStarted() const
 
 std::chrono::microseconds MidiSyncLinux::Implementation::syncInitialLatencyForTempo(double bpm) const
 {
-	std::chrono::microseconds beatDuration(static_cast<unsigned long long>(6e7 / bpm));
+	std::chrono::microseconds beatDuration(static_cast<unsigned long long>(kMicrosecondsInAMinute.count() / bpm));
 	std::chrono::microseconds clockDuration(beatDuration / kPPQN);
 	return 2 * clockDuration; // MIDI Start and MIDI Sond Position Pointer are sent before first MIDI Clock
 }
@@ -127,6 +128,46 @@ void MidiSyncLinux::Implementation::stopSyncThread()
 	}
 }
 
+inline void MidiSyncLinux::Implementation::compensateLatency(std::chrono::time_point<std::chrono::high_resolution_clock>& now, std::chrono::time_point<std::chrono::high_resolution_clock>& plannedSendingTime, bool& compensationHappened, std::chrono::microseconds& compensation)
+{
+	// here comes jitter/drift compensation tricks (still not almighty)
+
+	if (compensationHappened)
+	{
+		// we need to reset queue tempo back to normal if compensation has been applied on the previous frame
+		_queue.stop();
+		_queue.setTempo(_bpm);
+		_queue.start();
+		compensationHappened = false;
+	}
+
+	if (now > plannedSendingTime)
+	{
+		// "we are late", so we add this value to overall compensation
+		compensation += std::chrono::duration_cast<std::chrono::microseconds>(now - plannedSendingTime);
+	}
+	else if (now < plannedSendingTime)
+	{
+		// "we are early" and we will send next buffer as planned
+		preciseWaitUntil(plannedSendingTime);
+		now = plannedSendingTime;
+	}
+
+	if (compensation > std::chrono::microseconds(5))
+	{
+		// calculate new bpm (a bit faster) to catch the phase during next send
+		const std::chrono::microseconds compensatedTimeToSendPackets = std::chrono::microseconds(static_cast<int>(kMicrosecondsInAMinute.count() / _bpm)) - compensation;
+		const double compensatedBpm = static_cast<double>(kMicrosecondsInAMinute.count()) / compensatedTimeToSendPackets.count();
+
+		_queue.stop();
+		_queue.setTempo(compensatedBpm);
+		_queue.start();
+
+		compensationHappened = true;
+		compensation = std::chrono::microseconds(0);
+	}
+}
+
 void MidiSyncLinux::Implementation::syncThread()
 {
 	// initial pause check
@@ -145,63 +186,47 @@ void MidiSyncLinux::Implementation::syncThread()
 	std::chrono::time_point<std::chrono::high_resolution_clock> now;
 	std::chrono::time_point<std::chrono::high_resolution_clock> plannedSendingTime;
 	std::chrono::microseconds compensation = std::chrono::microseconds(0);
-	std::chrono::microseconds timeToSendPackets = std::chrono::microseconds(static_cast<int>(60000000.0 / _bpm));
+	std::chrono::microseconds timeToSendPackets = std::chrono::microseconds(static_cast<int>(kMicrosecondsInAMinute.count() / _bpm));
 
-	auto syncStateChanged = [this]{ return (_exit || _pause || _changeBpm || _restart); };
+	const auto syncStateChanged = [this]{ return (_exit || _pause || _changeBpm || _restart); };
 
-	bool sendStart = true;
+	bool inludeMidiStart = true;
+	bool compensationHappened = false;
 
 	while (true)
 	{
 		if (!syncStateChanged())
 		{
-			// jitter/drift compensation tricks (still not almighty)
-
 			now = std::chrono::high_resolution_clock::now();
 
-			// calculate planned sending time
 			if (plannedSendingTime == std::chrono::time_point<std::chrono::high_resolution_clock>())
 			{
+				// either initial cycle or reset was made -> reset
 				plannedSendingTime = now;
 			}
 			else
 			{
-				// TODO: calculate "now"  - new sending time
-				if (now > plannedSendingTime)
-				{
-					// "we are late", so we add this value to overall compensation
-					compensation += std::chrono::duration_cast<std::chrono::microseconds>(now - plannedSendingTime);
-				}
-				else
-				{
-					// "we are early" and we will send next buffer as planned
-					now = plannedSendingTime;
-				}
-
-				if (compensation > std::chrono::microseconds(5))
-				{
-					// TODO: we are 5+ microseconds late, we need to compensate this until it gets noticeable
-					compensation = std::chrono::microseconds(0);
-				}
+				compensateLatency(now, plannedSendingTime, compensationHappened, compensation);
 			}
 
-			plannedSendingTime = now + timeToSendPackets;
+			// next planned sending time
+			plannedSendingTime += timeToSendPackets;
 
-			_queue.enqueueMidiSyncEvents(_sourcePort, sendStart, sendStart, kPPQN);
+			// filling the queue with MIDI messages, since queue is started it will start sending immediately
+			_queue.enqueueMidiSyncEvents(_sourcePort, inludeMidiStart, inludeMidiStart, kPPQN);
 		}
 		else
 		{
 			if (_pause)
 			{
 				_pause = false;
-
 				_queue.stop();
 
 				std::unique_lock<std::mutex> lock(_pauseMutex);
 				_resumeCondition.wait(lock, [this]()->bool { return _resume; });
 				_resume = false;
 
-				sendStart = true;
+				inludeMidiStart = true;
 
 				_queue.start();
 				continue;
@@ -216,12 +241,10 @@ void MidiSyncLinux::Implementation::syncThread()
 			if (_changeBpm)
 			{
 				_changeBpm = false;
-
 				_queue.stop();
-
 				_queue.setTempo(_bpm);
-				timeToSendPackets = std::chrono::microseconds(static_cast<int>(60000000.0 / _bpm));
 
+				timeToSendPackets = std::chrono::microseconds(static_cast<int>(kMicrosecondsInAMinute.count() / _bpm));
 				plannedSendingTime = std::chrono::time_point<std::chrono::high_resolution_clock>();
 
 				_queue.start();
@@ -231,10 +254,9 @@ void MidiSyncLinux::Implementation::syncThread()
 			if (_restart)
 			{
 				_restart = false;
-
 				_queue.stop();
 
-				sendStart = true;
+				inludeMidiStart = false;
 
 				plannedSendingTime = std::chrono::time_point<std::chrono::high_resolution_clock>();
 
@@ -243,13 +265,12 @@ void MidiSyncLinux::Implementation::syncThread()
 			}
 		}
 
-		std::chrono::time_point<std::chrono::high_resolution_clock> endTime = now + timeToSendPackets;
-
-		if (sendStart)
+		if (inludeMidiStart)
 		{
-			sendStart = false;
+			inludeMidiStart = false;
 		}
-		preciseWaitUntil(endTime);
+
+		preciseWaitUntil(plannedSendingTime);
 	}
 }
 
