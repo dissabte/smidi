@@ -20,6 +20,7 @@ MidiSyncLinux::Implementation::Implementation(MidiOutPortLinux::Implementation& 
     , _sourcePort(midiOut.applicationPortId())
     , _bpm(120.0)
     , _threadIsCreated(false)
+    , _syncIsStarted(false)
     , _pause(false)
     , _resume(false)
     , _changeBpm(false)
@@ -33,6 +34,11 @@ MidiSyncLinux::Implementation::Implementation(MidiOutPortLinux::Implementation& 
 MidiSyncLinux::Implementation::~Implementation()
 {
 	stopSyncThread();
+}
+
+void MidiSyncLinux::Implementation::close()
+{
+	_queue.close();
 }
 
 void MidiSyncLinux::Implementation::startSync(double bpm)
@@ -256,7 +262,7 @@ void MidiSyncLinux::Implementation::syncThread()
 				_restart = false;
 				_queue.stop();
 
-				inludeMidiStart = false;
+				inludeMidiStart = true;
 
 				plannedSendingTime = std::chrono::time_point<std::chrono::high_resolution_clock>();
 

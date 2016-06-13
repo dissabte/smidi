@@ -16,10 +16,6 @@ MidiQueue::MidiQueue()
 
 MidiQueue::~MidiQueue()
 {
-	if (_id != kInvalidId)
-	{
-		snd_seq_free_queue(_sequencer, _id);
-	}
 }
 
 void MidiQueue::init(snd_seq_t* sequencer)
@@ -48,22 +44,43 @@ void MidiQueue::init(snd_seq_t* sequencer, const std::string& name)
 	}
 }
 
+void MidiQueue::close()
+{
+	if (_id != kInvalidId)
+	{
+		snd_seq_free_queue(_sequencer, _id);
+		_id = kInvalidId;
+	}
+}
+
 void MidiQueue::start()
 {
 	snd_seq_start_queue(_sequencer, _id, nullptr);
-	snd_seq_drain_output(_sequencer);
+	int result = snd_seq_drain_output(_sequencer);
+	if (result < 0)
+	{
+		std::cerr << "MidiQueue::start error:" << snd_strerror(result) << std::endl;
+	}
 }
 
 void MidiQueue::stop()
 {
 	snd_seq_stop_queue(_sequencer, _id, nullptr);
-	snd_seq_drain_output(_sequencer);
+	int result = snd_seq_drain_output(_sequencer);
+	if (result < 0)
+	{
+		std::cerr << "MidiQueue::stop error:" << snd_strerror(result) << std::endl;
+	}
 }
 
 void MidiQueue::resume()
 {
 	snd_seq_continue_queue(_sequencer, _id, nullptr);
-	snd_seq_drain_output(_sequencer);
+	int result = snd_seq_drain_output(_sequencer);
+	if (result < 0)
+	{
+		std::cerr << "MidiQueue::resume error:" << snd_strerror(result) << std::endl;
+	}
 }
 
 void MidiQueue::setTempo(double bpm)
@@ -74,14 +91,22 @@ void MidiQueue::setTempo(double bpm)
 	snd_seq_queue_tempo_set_tempo(queueTempo, tempo);
 	snd_seq_queue_tempo_set_ppq(queueTempo, kPPQN);
 	snd_seq_set_queue_tempo(_sequencer, _id, queueTempo);
-	snd_seq_drain_output(_sequencer);
+	int result = snd_seq_drain_output(_sequencer);
+	if (result < 0)
+	{
+		std::cerr << "MidiQueue::setTempo error:" << snd_strerror(result) << std::endl;
+	}
 }
 
 void MidiQueue::changeTempo(double bpm)
 {
 	const unsigned int tempo = convertBPMToMicroseconds(bpm);
 	snd_seq_change_queue_tempo(_sequencer, _id, tempo, NULL);
-	snd_seq_drain_output(_sequencer);
+	int result = snd_seq_drain_output(_sequencer);
+	if (result < 0)
+	{
+		std::cerr << "MidiQueue::changeTempo error:" << snd_strerror(result) << std::endl;
+	}
 }
 
 MidiQueue::operator int() const
@@ -96,7 +121,11 @@ void MidiQueue::enqueueMidiMessage(const snd_seq_event_type messageType, const i
 	snd_seq_ev_schedule_tick(&event, _id, 1, tick);
 	snd_seq_ev_set_source(&event, sourcePort);
 	snd_seq_ev_set_subs(&event);
-	snd_seq_event_output_direct(_sequencer, &event);
+	int result = snd_seq_event_output_direct(_sequencer, &event);
+	if (result < 0)
+	{
+		std::cerr << "MidiQueue::enqueueMidiMessage error:" << snd_strerror(result) << std::endl;
+	}
 }
 
 void MidiQueue::enqueueMidiSyncEvents(const int sourcePort, bool includeMidiStart, bool includeSongPositionReset, unsigned int numberOfMidiClocks)
@@ -119,7 +148,11 @@ void MidiQueue::enqueueMidiSyncEvents(const int sourcePort, bool includeMidiStar
 		enqueueMidiMessage(SND_SEQ_EVENT_CLOCK, sourcePort, tick);
 		++tick;
 	}
-	snd_seq_drain_output(_sequencer);
+	int result = snd_seq_drain_output(_sequencer);
+	if (result < 0)
+	{
+		std::cerr << "MidiQueue::enqueueMidiSyncEvents error:" << snd_strerror(result) << std::endl;
+	}
 }
 
 unsigned int MidiQueue::timeToSendInMicroseconds(const unsigned int numberOfMessages, const unsigned int deltaTimeInTicks, const double bpm) const

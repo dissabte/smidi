@@ -30,6 +30,8 @@ public:
 	void init(snd_seq_t* sequencer);
 	void init(snd_seq_t* sequencer, const std::string& name);
 
+	void close();
+
 	void start();
 	void stop();
 	void resume();

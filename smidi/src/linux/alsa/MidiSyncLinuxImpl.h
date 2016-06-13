@@ -31,6 +31,8 @@ public:
 	Implementation(MidiOutPortLinux::Implementation& midiOut);
 	~Implementation();
 
+	void close();
+
 	void startSync(double bpm);
 	void stopSync();
 	void resumeSync();

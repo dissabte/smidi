@@ -25,6 +25,11 @@ void MidiSyncLinux::initialize(std::unique_ptr<MidiSyncLinux::Implementation>&& 
 	_impl = std::move(implementation);
 }
 
+void MidiSyncLinux::close()
+{
+	_impl->close();
+}
+
 void MidiSyncLinux::startSync(double bpm)
 {
 	_impl->startSync(bpm);

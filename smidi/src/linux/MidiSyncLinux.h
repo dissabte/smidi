@@ -21,6 +21,7 @@ public:
 	virtual ~MidiSyncLinux();
 
 	void initialize(std::unique_ptr<Implementation>&& implementation);
+	void close();
 
 	virtual void startSync(double bpm) override;
 	virtual void stopSync() override;
