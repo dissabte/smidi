@@ -48,7 +48,7 @@ target_link_libraries(${LIBRARY_NAME} -lpthread -lasound)
 add_subdirectory("demo")
 
 # Doxygen
-set(SMIDI_DOCUMENTATION_DIR "docs")
+set(SMIDI_DOCUMENTATION_DIR "${CMAKE_CURRENT_SOURCE_DIR}/docs")
 if (EXISTS "${SMIDI_DOCUMENTATION_DIR}/doxygen.cmake")
 	include(${SMIDI_DOCUMENTATION_DIR}/doxygen.cmake)
 endif()

@@ -2,13 +2,12 @@ message(STATUS "Processing smidi demo...")
 
 set(SMIDIDEMO_SOURCES "main.cpp")
 
-if (WATCHER_PATH)
-	add_subdirectory("${WATCHER_PATH}" watcher)
+if (HOTPLUG_FOUND)
 	add_executable(smidiDemo ${SMIDIDEMO_SOURCES})
-	add_dependencies(smidiDemo smidi watcher)
-	target_link_libraries (smidiDemo LINK_PUBLIC smidi watcher)
+	add_dependencies(smidiDemo smidi hotplug)
+	target_link_libraries (smidiDemo LINK_PUBLIC smidi hotplug)
 else()
-	message(STATUS "Please specify path to watcher library (WATCHER_PATH) to build this demo")
+	message(WARNING "hotplug library is required to build smidi demo")
 endif()
 
 message(STATUS "Processing smidi demo done")

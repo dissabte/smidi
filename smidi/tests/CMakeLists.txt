@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-message(STATUS "Processing unittests...")
+message(STATUS "Processing smidi unittests...")
 
 set(SMIDI_TESTS smidi_tests)
 
@@ -15,4 +15,4 @@ add_executable(${SMIDI_TESTS} ${SMIDI_TESTS_SOURCES})
 
 target_link_libraries(${SMIDI_TESTS} UnitTest++ smidi)
 
-message(STATUS "Processing unittests done")
+message(STATUS "Processing smidi unittests done")

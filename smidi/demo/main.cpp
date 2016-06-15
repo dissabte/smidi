@@ -3,7 +3,7 @@
 #include <smidi/MidiDevice.h>
 #include <smidi/MidiInPort.h>
 #include <smidi/MidiOutPort.h>
-#include <watcher/DeviceWatcher.h>
+#include <hotplug/HotPlugWatcher.h>
 #include <iostream>
 
 
@@ -34,11 +34,11 @@ int main()
 
 	printDevices(enumerator);
 
-	DeviceWatcher watcher(DeviceWatcher::USB);
-	watcher.registerObserver([&enumerator](const DeviceNotificationType& notification, const DeviceNotificationData&)
+	HotPlugWatcher watcher(HotPlugWatcher::USB);
+	watcher.registerObserver([&enumerator](const HotPlugNotificationType& notification, const HotPlugNotificationData&)
 	{
-		if (notification == DeviceNotificationType::DEVICE_ADDED ||
-		    notification == DeviceNotificationType::DEVICE_REMOVED)
+		if (notification == HotPlugNotificationType::DEVICE_ADDED ||
+		    notification == HotPlugNotificationType::DEVICE_REMOVED)
 		{
 			enumerator.updateDeviceList();
 			printDevices(enumerator);
